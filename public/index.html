@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Research Assistant - AI-Powered Research Tool</title>
+    <link rel="stylesheet" href="css/style.css">    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="logo">
+                    <i class="fas fa-robot"></i>
+                    <h1>Smart Research Assistant</h1>
+                </div>
+                <div class="status-indicator">
+                    <span id="connectionStatus" class="status-dot disconnected"></span>
+                    <span id="statusText">Connecting...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <div class="container">
+                <!-- Welcome Section -->
+                <section id="welcomeSection" class="welcome-section">
+                    <div class="welcome-content">
+                        <div class="welcome-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h2>AI-Powered Research at Your Fingertips</h2>
+                        <p>Discover comprehensive insights on any topic with our intelligent research assistant powered by Ollama and advanced AI.</p>
+                        <button id="startResearchBtn" class="btn btn-primary btn-large">
+                            <i class="fas fa-rocket"></i>
+                            Start Research
+                        </button>
+                    </div>
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <i class="fas fa-brain"></i>
+                            <h3>Intelligent Analysis</h3>
+                            <p>Advanced AI breaks down complex topics into digestible insights</p>
+                        </div>
+                        <div class="feature-card">
+                            <i class="fas fa-chart-line"></i>
+                            <h3>Structured Research</h3>
+                            <p>Organized findings with clear sections and comprehensive coverage</p>
+                        </div>
+                        <div class="feature-card">
+                            <i class="fas fa-bolt"></i>
+                            <h3>Fast Results</h3>
+                            <p>Get detailed research summaries in minutes, not hours</p>
+                        </div>
+                        <div class="feature-card">
+                            <i class="fas fa-question-circle"></i>
+                            <h3>Follow-up Questions</h3>
+                            <p>Discover related topics and deeper research opportunities</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Research Form -->
+                <section id="researchForm" class="research-form hidden">
+                    <div class="form-container">
+                        <h2>What would you like to research?</h2>
+                        <form id="researchFormElement">
+                            <div class="form-group">
+                                <label for="researchTopic">Research Topic</label>
+                                <input type="text" id="researchTopic" placeholder="e.g., Artificial Intelligence in Healthcare, Quantum Computing, Climate Change Solutions..." required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="researchMode">Research Mode</label>
+                                <select id="researchMode" required>
+                                    <option value="COMPREHENSIVE">Comprehensive Research - Deep dive into all aspects</option>
+                                    <option value="QUICK">Quick Overview - Fast summary of key points</option>
+                                    <option value="TECHNICAL">Technical Analysis - Focus on technical details</option>
+                                    <option value="COMPARATIVE">Comparative Study - Compare multiple aspects</option>
+                                    <option value="HISTORICAL">Historical Context - Explore development over time</option>
+                                </select>
+                            </div>
+
+                            <div class="form-options">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="includeFollowups" checked>
+                                    <span class="checkmark"></span>
+                                    Include follow-up questions
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="includeSynthesis" checked>
+                                    <span class="checkmark"></span>
+                                    Include research synthesis
+                                </label>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" id="backBtn" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i>
+                                    Back
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i>
+                                    Start Research
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </section>                <!-- Research Progress -->
+                <section id="researchProgress" class="research-progress hidden">
+                    <div class="progress-container">
+                        <h2 id="progressTitle">Researching your topic...</h2>
+                        
+                        <!-- AI Thinking Display -->
+                        <div class="ai-thinking-container">
+                            <div class="ai-avatar">
+                                <i class="fas fa-brain"></i>
+                                <div class="thinking-pulse"></div>
+                            </div>
+                            <div class="thinking-bubble">
+                                <div class="thinking-text" id="thinkingText">Initializing research...</div>
+                                <div class="thinking-dots">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detailed Progress Steps -->
+                        <div class="progress-steps-detailed">
+                            <div class="step-detailed active" id="stepDetailed1">
+                                <div class="step-icon-detailed">
+                                    <i class="fas fa-search"></i>
+                                    <div class="step-ripple"></div>
+                                </div>
+                                <div class="step-content-detailed">
+                                    <h3>Topic Analysis</h3>
+                                    <p>Breaking down your research topic into key areas</p>
+                                    <div class="step-substeps" id="substeps1">
+                                        <div class="substep">• Parsing research query</div>
+                                        <div class="substep">• Identifying key concepts</div>
+                                        <div class="substep">• Structuring research plan</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="step-detailed" id="stepDetailed2">
+                                <div class="step-icon-detailed">
+                                    <i class="fas fa-book-open"></i>
+                                    <div class="step-ripple"></div>
+                                </div>
+                                <div class="step-content-detailed">
+                                    <h3>Information Gathering</h3>
+                                    <p>Researching each subtopic with AI intelligence</p>
+                                    <div class="step-substeps" id="substeps2">
+                                        <div class="substep">• Analyzing subtopic 1</div>
+                                        <div class="substep">• Analyzing subtopic 2</div>
+                                        <div class="substep">• Analyzing subtopic 3</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="step-detailed" id="stepDetailed3">
+                                <div class="step-icon-detailed">
+                                    <i class="fas fa-lightbulb"></i>
+                                    <div class="step-ripple"></div>
+                                </div>
+                                <div class="step-content-detailed">
+                                    <h3>Synthesis & Analysis</h3>
+                                    <p>Combining findings into coherent insights</p>
+                                    <div class="step-substeps" id="substeps3">
+                                        <div class="substep">• Identifying patterns</div>
+                                        <div class="substep">• Drawing connections</div>
+                                        <div class="substep">• Generating insights</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="step-detailed" id="stepDetailed4">
+                                <div class="step-icon-detailed">
+                                    <i class="fas fa-magic"></i>
+                                    <div class="step-ripple"></div>
+                                </div>
+                                <div class="step-content-detailed">
+                                    <h3>Final Assembly</h3>
+                                    <p>Creating comprehensive research report</p>
+                                    <div class="step-substeps" id="substeps4">
+                                        <div class="substep">• Formatting results</div>
+                                        <div class="substep">• Generating follow-ups</div>
+                                        <div class="substep">• Quality assurance</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Enhanced Progress Bar -->
+                        <div class="progress-bar-enhanced">
+                            <div class="progress-fill-enhanced" id="progressFillEnhanced"></div>
+                            <div class="progress-sparkle" id="progressSparkle"></div>
+                        </div>
+                        
+                        <!-- Real-time Stats -->
+                        <div class="realtime-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Elapsed Time</span>
+                                <span class="stat-value" id="elapsedTime">0s</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Current Step</span>
+                                <span class="stat-value" id="currentStepName">Initializing</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Progress</span>
+                                <span class="stat-value" id="progressPercentage">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Research Results -->
+                <section id="researchResults" class="research-results hidden">
+                    <div class="results-container">
+                        <div class="results-header">
+                            <h2 id="resultsTitle">Research Results</h2>
+                            <div class="results-actions">
+                                <button id="exportBtn" class="btn btn-outline">
+                                    <i class="fas fa-download"></i>
+                                    Export
+                                </button>
+                                <button id="newResearchBtn" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i>
+                                    New Research
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="results-content">
+                            <!-- Executive Summary -->
+                            <div class="result-card">
+                                <div class="card-header">
+                                    <i class="fas fa-clipboard-list"></i>
+                                    <h3>Executive Summary</h3>
+                                </div>
+                                <div class="card-content" id="executiveSummary">
+                                    <!-- Dynamic content -->
+                                </div>
+                            </div>
+
+                            <!-- Topic Analysis -->
+                            <div class="result-card">
+                                <div class="card-header">
+                                    <i class="fas fa-chart-pie"></i>
+                                    <h3>Topic Analysis</h3>
+                                </div>
+                                <div class="card-content" id="topicAnalysis">
+                                    <!-- Dynamic content -->
+                                </div>
+                            </div>
+
+                            <!-- Research Findings -->
+                            <div class="result-card">
+                                <div class="card-header">
+                                    <i class="fas fa-book-open"></i>
+                                    <h3>Research Findings</h3>
+                                </div>
+                                <div class="card-content" id="researchFindings">
+                                    <!-- Dynamic content -->
+                                </div>
+                            </div>
+
+                            <!-- Research Synthesis -->
+                            <div class="result-card" id="synthesisCard">
+                                <div class="card-header">
+                                    <i class="fas fa-lightbulb"></i>
+                                    <h3>Research Synthesis</h3>
+                                </div>
+                                <div class="card-content" id="researchSynthesis">
+                                    <!-- Dynamic content -->
+                                </div>
+                            </div>
+
+                            <!-- Follow-up Questions -->
+                            <div class="result-card" id="followupCard">
+                                <div class="card-header">
+                                    <i class="fas fa-question-circle"></i>
+                                    <h3>Follow-up Questions</h3>
+                                </div>
+                                <div class="card-content" id="followupQuestions">
+                                    <!-- Dynamic content -->
+                                </div>
+                            </div>
+
+                            <!-- Performance Stats -->
+                            <div class="result-card">
+                                <div class="card-header">
+                                    <i class="fas fa-chart-bar"></i>
+                                    <h3>Performance Stats</h3>
+                                </div>
+                                <div class="card-content" id="performanceStats">
+                                    <!-- Dynamic content -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2025 Smart Research Assistant. Powered by Ollama & AI.</p>
+                <div class="footer-links">
+                    <a href="#" onclick="showAbout()">About</a>
+                    <a href="#" onclick="showHelp()">Help</a>
+                    <a href="https://github.com" target="_blank">GitHub</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Processing your research...</p>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="notification hidden">
+        <div class="notification-content">
+            <i class="notification-icon"></i>
+            <span class="notification-message"></span>
+        </div>
+    </div>
+
+    <!-- Floating Help Button -->
+    <div class="floating-help" onclick="showHelp()" title="Need help?">
+        <i class="fas fa-question"></i>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
