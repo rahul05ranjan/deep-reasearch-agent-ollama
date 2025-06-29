@@ -1,0 +1,110 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install dependencies
+        run: npm ci
+      - name: Audit for vulnerabilities
+        run: npm audit --audit-level=high || true
+      - name: Check formatting
+        run: |
+          if [ -f package.json ] && jq -e '.scripts.format' package.json > /dev/null; then
+            npm run format -- --check
+          else
+            echo "No format script found. Skipping format check."
+          fi
+      - name: Lint code
+        run: |
+          if [ -f package.json ] && jq -e '.scripts.lint' package.json > /dev/null; then
+            npm run lint
+          else
+            echo "No lint script found. Skipping lint."
+          fi
+      - name: Run tests
+        run: npm test
+      - name: Upload test results (if any)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            test-results/
+            junit.xml
+            coverage/
+      - name: Build project
+        run: |
+          if [ -f package.json ] && jq -e '.scripts.build' package.json > /dev/null; then
+            npm run build
+          else
+            echo "No build script found. Skipping build."
+          fi
+      - name: Upload build artifacts (if any)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            dist/
+            build/
+      - name: Build Docker image
+        run: docker build -t my-app:latest .
+      - name: Test Docker image (run container)
+        run: |
+          docker run --rm my-app:latest echo "Docker image built and runs successfully."
+      # - name: Push Docker image to registry (placeholder)
+      #   run: echo "Add docker login and push commands here."
+      #   env:
+      #     DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      #     DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      # Uncomment and configure above lines to enable Docker push
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build project
+        run: |
+          if [ -f package.json ] && jq -e '.scripts.build' package.json > /dev/null; then
+            npm run build
+          else
+            echo "No build script found. Skipping build."
+          fi
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ./
+      - name: Deploy (placeholder)
+        run: echo "Deploy step goes here. Replace with your deployment script or action."
