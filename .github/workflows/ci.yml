@@ -2,9 +2,9 @@ name: CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   build:
@@ -73,11 +73,11 @@ jobs:
       - name: Test Docker image (run container)
         run: |
           docker run --rm my-app:latest echo "Docker image built and runs successfully."
-      # - name: Push Docker image to registry (placeholder)
-      #   run: echo "Add docker login and push commands here."
-      #   env:
-      #     DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      #     DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Push Docker image to registry (placeholder)
+        run: echo "Add docker login and push commands here."
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       # Uncomment and configure above lines to enable Docker push
 
   deploy:
