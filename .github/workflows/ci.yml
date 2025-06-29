@@ -68,6 +68,7 @@ jobs:
           path: |
             dist/
             build/
+          if-no-files-found: ignore
       - name: Build Docker image
         run: docker build -t my-app:latest .
       - name: Test Docker image (run container)
@@ -102,6 +103,7 @@ jobs:
             echo "No build script found. Skipping build."
           fi
       - name: Download build artifacts
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
