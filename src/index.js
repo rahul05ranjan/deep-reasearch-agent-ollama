@@ -12,6 +12,12 @@ class SmartResearchAssistant {
 
   async initialize() {
     this.showWelcome();
+    Logger.info(`Ollama base URL: ${this.agent?.ollama?.host || 'http://localhost:11434'}`);
+    Logger.info('Standard instructions:');
+    Logger.info('1. Make sure Ollama is running: ollama serve');
+    Logger.info('2. Install a model: ollama pull llama3.1');
+    Logger.info('3. Run demo: npm run demo');
+    Logger.info('4. Start researching: npm start');
     
     const spinner = new Spinner('Connecting to Ollama...').start();
     const connected = await this.agent.checkConnection();

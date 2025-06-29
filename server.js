@@ -188,7 +188,7 @@ class ResearchServer {
 
       this.app.listen(this.port, () => {
         Logger.success(`🚀 Smart Research Assistant UI running on http://localhost:${this.port}`);
-        Logger.info('📖 Open your browser and start researching!');
+        Logger.info('📖 Open your browser and start researching!'); 
       });
 
     } catch (error) {
