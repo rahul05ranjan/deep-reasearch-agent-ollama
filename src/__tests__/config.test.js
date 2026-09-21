@@ -1,13 +1,15 @@
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import { config, researchModes } from '../config.js';
 
 describe('Config', () => {
-  test('should have ollama config', () => {
-    expect(config.ollama).toBeDefined();
-    expect(config.ollama.baseUrl).toBeDefined();
+  it('should have ollama config', () => {
+    assert.ok(config.ollama);
+    assert.ok(config.ollama.baseUrl);
   });
 
-  test('should have researchModes', () => {
-    expect(typeof researchModes).toBe('object');
-    expect(Object.keys(researchModes).length).toBeGreaterThan(0);
+  it('should have researchModes', () => {
+    assert.equal(typeof researchModes, 'object');
+    assert.ok(Object.keys(researchModes).length > 0);
   });
 });

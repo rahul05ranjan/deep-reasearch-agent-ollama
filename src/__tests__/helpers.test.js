@@ -1,17 +1,19 @@
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import { Logger, Formatter } from '../utils/helpers.js';
 
 describe('Helpers', () => {
-  test('Logger should have info, error, success, title methods', () => {
-    expect(typeof Logger.info).toBe('function');
-    expect(typeof Logger.error).toBe('function');
-    expect(typeof Logger.success).toBe('function');
-    expect(typeof Logger.title).toBe('function');
+  it('Logger should have info, error, success, title methods', () => {
+    assert.equal(typeof Logger.info, 'function');
+    assert.equal(typeof Logger.error, 'function');
+    assert.equal(typeof Logger.success, 'function');
+    assert.equal(typeof Logger.title, 'function');
   });
 
-  test('Formatter should have highlight, dim, section, box methods', () => {
-    expect(typeof Formatter.highlight).toBe('function');
-    expect(typeof Formatter.dim).toBe('function');
-    expect(typeof Formatter.section).toBe('function');
-    expect(typeof Formatter.box).toBe('function');
+  it('Formatter should have highlight, dim, section, box methods', () => {
+    assert.equal(typeof Formatter.highlight, 'function');
+    assert.equal(typeof Formatter.dim, 'function');
+    assert.equal(typeof Formatter.section, 'function');
+    assert.equal(typeof Formatter.box, 'function');
   });
 });

@@ -1,13 +1,14 @@
-import '../validate.js';
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 
 describe('Validate Script', () => {
-  test('should run without throwing', async () => {
+  it('should run without throwing', async () => {
     let error;
     try {
       await import('../validate.js');
     } catch (e) {
       error = e;
     }
-    expect(error).toBeUndefined();
+    assert.equal(error, undefined);
   });
 });

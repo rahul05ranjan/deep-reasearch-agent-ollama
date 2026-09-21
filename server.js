@@ -1,21 +1,22 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { ResearchAgent } from './src/agents/research-agent.js';
+import { ResearchEngine } from './src/engine/research-engine.js';
 import { Logger } from './src/utils/helpers.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-class ResearchServer {
-  constructor() {
+export class ResearchServer {
+  constructor(options = {}) {
     this.app = express();
-    this.port = process.env.PORT || 3000;
-    this.agent = new ResearchAgent();
-    
+    this.port = options.port ?? (process.env.PORT || 3000);
+    this.engine = options.engine || new ResearchEngine();
+
     this.setupMiddleware();
     this.setupRoutes();
   }
+
   setupMiddleware() {
     // Enable CORS manually
     this.app.use((req, res, next) => {
@@ -28,13 +29,13 @@ class ResearchServer {
         next();
       }
     });
-    
+
     // Parse JSON bodies
     this.app.use(express.json());
-    
+
     // Serve static files from public directory
     this.app.use(express.static(path.join(__dirname, 'public')));
-    
+
     // Request logging
     this.app.use((req, res, next) => {
       console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
@@ -46,7 +47,7 @@ class ResearchServer {
     // Health check endpoint
     this.app.get('/api/health', async (req, res) => {
       try {
-        const connected = await this.agent.checkConnection();
+        const connected = await this.engine.checkConnection();
         res.json({
           status: 'ok',
           ollamaConnected: connected,
@@ -75,49 +76,19 @@ class ResearchServer {
         Logger.info(`🔍 Starting research: ${topic} (${mode})`);
 
         // Check connection first
-        const connected = await this.agent.checkConnection();
+        const connected = await this.engine.checkConnection();
         if (!connected) {
           return res.status(503).json({
             error: 'Cannot connect to Ollama. Please ensure Ollama is running and the model is available.'
           });
         }
 
-        // Analyze topic
-        const analysis = await this.agent.analyzeResearchTopic(topic, mode);
-
-        // Conduct research
-        const researchResults = await this.agent.conductResearch(topic, analysis.subtopics, mode);
-
-        // Generate synthesis if requested
-        let synthesis = null;
-        if (includeSynthesis) {
-          synthesis = await this.agent.synthesizeFindings(topic, researchResults);
-        }
-
-        // Generate follow-up questions if requested
-        let followupQuestions = null;
-        if (includeFollowups) {
-          const researchSummary = Object.values(researchResults).map(r => r.content).join('\n\n');
-          followupQuestions = await this.agent.generateFollowUpQuestions(topic, researchSummary);
-        }
-
-        // Create executive summary
-        const fullResearch = Object.entries(researchResults)
-          .map(([title, data]) => `${title}: ${data.content}`)
-          .join('\n\n');
-        const executiveSummary = await this.agent.createExecutiveSummary(topic, fullResearch);
-
-        // Prepare response
-        const results = {
-          topic,
+        // Delegate entire research workflow to the deep ResearchEngine
+        const results = await this.engine.executeResearch(topic, {
           mode,
-          analysis,
-          researchResults,
-          synthesis,
-          followupQuestions,
-          executiveSummary,
-          performanceStats: this.agent.getPerformanceStats()
-        };
+          includeFollowups,
+          includeSynthesis
+        });
 
         Logger.success(`✅ Research completed: ${topic}`);
         res.json(results);
@@ -134,14 +105,13 @@ class ResearchServer {
     // Models endpoint - list available Ollama models
     this.app.get('/api/models', async (req, res) => {
       try {
-        const response = await this.agent.ollama.list();
-        res.json({
-          models: response.models.map(model => ({
-            name: model.name,
-            size: model.size,
-            modified: model.modified_at
-          }))
-        });
+        const response = await this.engine.llm.listModels();
+        const models = (response.models || []).map((model) => ({
+          name: model.name,
+          size: model.size,
+          modified: model.modified_at || model.modified
+        }));
+        res.json({ models });
       } catch (error) {
         res.status(500).json({
           error: 'Failed to fetch models',
@@ -164,7 +134,7 @@ class ResearchServer {
     });
 
     // Error handler
-    this.app.use((error, req, res, next) => {
+    this.app.use((error, req, res, _next) => {
       console.error('Server error:', error);
       res.status(500).json({
         error: 'Internal server error',
@@ -177,8 +147,8 @@ class ResearchServer {
     try {
       // Check Ollama connection on startup
       Logger.info('🔧 Checking Ollama connection...');
-      const connected = await this.agent.checkConnection();
-      
+      const connected = await this.engine.checkConnection();
+
       if (connected) {
         Logger.success('✅ Connected to Ollama successfully');
       } else {
@@ -188,7 +158,7 @@ class ResearchServer {
 
       this.app.listen(this.port, () => {
         Logger.success(`🚀 Smart Research Assistant UI running on http://localhost:${this.port}`);
-        Logger.info('📖 Open your browser and start researching!'); 
+        Logger.info('📖 Open your browser and start researching!');
       });
 
     } catch (error) {
@@ -198,6 +168,8 @@ class ResearchServer {
   }
 }
 
-// Start the server
-const server = new ResearchServer();
-server.start();
+// Start the server only when executed directly
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  const server = new ResearchServer();
+  server.start();
+}

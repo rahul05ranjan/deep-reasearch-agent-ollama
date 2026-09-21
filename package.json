@@ -6,9 +6,10 @@
   "type": "module",  "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "research": "node src/research-agent.js",
-    "demo": "node src/demo.js",
+    "research": "node src/index.js",
+    "demo": "node src/index.js --demo",
     "test": "node src/test.js",
+    "test:unit": "node --test src/__tests__/*.test.js",
     "web": "node server.js",
     "web-dev": "node --watch server.js"
   },

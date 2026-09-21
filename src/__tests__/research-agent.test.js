@@ -1,24 +1,23 @@
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import { ResearchAgent } from '../agents/research-agent.js';
 
-describe('ResearchAgent', () => {
-  let agent;
-  beforeAll(() => {
-    agent = new ResearchAgent();
+describe('ResearchAgent Compatibility', () => {
+  const agent = new ResearchAgent();
+
+  it('should instantiate', () => {
+    assert.ok(agent);
   });
 
-  test('should instantiate', () => {
-    expect(agent).toBeDefined();
+  it('should have checkConnection method', () => {
+    assert.equal(typeof agent.checkConnection, 'function');
   });
 
-  test('should have checkConnection method', () => {
-    expect(typeof agent.checkConnection).toBe('function');
+  it('should have analyzeResearchTopic method', () => {
+    assert.equal(typeof agent.analyzeResearchTopic, 'function');
   });
 
-  test('should have analyzeResearchTopic method', () => {
-    expect(typeof agent.analyzeResearchTopic).toBe('function');
-  });
-
-  test('should have conductResearch method', () => {
-    expect(typeof agent.conductResearch).toBe('function');
+  it('should have conductResearch method', () => {
+    assert.equal(typeof agent.conductResearch, 'function');
   });
 });
