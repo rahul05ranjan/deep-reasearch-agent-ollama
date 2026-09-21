@@ -11,3 +11,18 @@ export const TopicAnalysisSchema = z.object({
   subtopics: z.array(SubtopicSchema).min(1),
   mainQuestions: z.array(z.string())
 });
+
+export const ResearchModeSchema = z.enum([
+  'COMPREHENSIVE',
+  'QUICK',
+  'TECHNICAL',
+  'COMPARATIVE',
+  'HISTORICAL'
+]);
+
+export const ResearchRequestSchema = z.object({
+  topic: z.string({ error: 'Research topic is required' }).trim().min(1, 'Research topic is required'),
+  mode: ResearchModeSchema.default('COMPREHENSIVE'),
+  includeFollowups: z.boolean().default(true),
+  includeSynthesis: z.boolean().default(true)
+});
