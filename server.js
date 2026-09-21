@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { ResearchEngine } from './src/engine/research-engine.js';
 import { Logger } from './src/utils/helpers.js';
+import { ResearchRequestSchema } from './src/contracts/schemas.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -65,13 +66,15 @@ export class ResearchServer {
     // Research endpoint
     this.app.post('/api/research', async (req, res) => {
       try {
-        const { topic, mode = 'COMPREHENSIVE', includeFollowups = true, includeSynthesis = true } = req.body;
-
-        if (!topic || !topic.trim()) {
+        const parseResult = ResearchRequestSchema.safeParse(req.body);
+        if (!parseResult.success) {
+          const firstError = parseResult.error.issues?.[0]?.message || parseResult.error.errors?.[0]?.message || 'Invalid research request';
           return res.status(400).json({
-            error: 'Research topic is required'
+            error: firstError
           });
         }
+
+        const { topic, mode, includeFollowups, includeSynthesis } = parseResult.data;
 
         Logger.info(`🔍 Starting research: ${topic} (${mode})`);
 
@@ -135,6 +138,11 @@ export class ResearchServer {
 
     // Error handler
     this.app.use((error, req, res, _next) => {
+      if (error.status === 400 || error instanceof SyntaxError || error.type === 'entity.parse.failed') {
+        return res.status(400).json({
+          error: 'Invalid JSON body'
+        });
+      }
       console.error('Server error:', error);
       res.status(500).json({
         error: 'Internal server error',
