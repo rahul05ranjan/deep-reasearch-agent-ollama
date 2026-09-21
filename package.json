@@ -2,19 +2,22 @@
   "name": "smart-research-assistant",
   "version": "1.0.0",
   "description": "An AI-powered research assistant using Ollama",
-  "main": "src/index.js",
+  "main": "dist/src/index.js",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "node --watch src/index.js",
-    "research": "node src/index.js",
-    "demo": "node src/index.js --demo",
+    "start": "node dist/src/index.js",
+    "dev": "tsx watch src/index.ts",
+    "research": "node dist/src/index.js",
+    "demo": "node dist/src/index.js --demo",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "node src/test.js",
+    "test": "npm run test:unit",
     "test:unit": "tsx --test src/__tests__/*.test.*",
-    "web": "node server.js",
-    "web-dev": "node --watch server.js"
+    "web": "node dist/server.js",
+    "web-dev": "tsx watch server.ts"
   },
   "keywords": [
     "ai",
@@ -33,14 +36,14 @@
     "inquirer": "^9.2.12",
     "marked": "^9.1.2",
     "ollama": "^0.5.9",
-    "ora": "^8.0.1"
+    "ora": "^8.0.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/inquirer": "^9.0.10",
     "@types/node": "^26.6.2",
     "tsx": "^4.23.15",
-    "typescript": "^7.0.2",
-    "zod": "^4.6.5"
+    "typescript": "^7.0.2"
   }
 }

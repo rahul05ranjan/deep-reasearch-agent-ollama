@@ -3,9 +3,10 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm ci
 COPY . .
-RUN if [ -f package.json ] && jq -e '.scripts.build' package.json > /dev/null; then npm run build; fi
+RUN npm run build
+RUN npm prune --omit=dev
 
 FROM node:20-alpine AS runner
 WORKDIR /app
@@ -15,4 +16,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD wget --quiet --tries=1 --spider http://localhost:3000/ || exit 1
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
-CMD ["node", "server.js"]
+CMD ["node", "dist/server.js"]
