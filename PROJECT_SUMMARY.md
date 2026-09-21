@@ -54,11 +54,13 @@ Smart Research Assistant/
 ## 🛠️ Installation & Setup
 
 ### Prerequisites
+
 1. **Install Ollama** from https://ollama.com/download
 2. **Start Ollama**: `ollama serve`
 3. **Install a model**: `ollama pull llama3.1`
 
 ### Quick Start
+
 ```bash
 # Navigate to project
 cd "c:\PROJECTS\AI\structured output ollama"
@@ -82,16 +84,20 @@ npm run research "Your Topic Here"
 ## 🎯 Usage Examples
 
 ### Interactive Mode
+
 ```bash
 npm start
 ```
+
 Then follow the prompts to:
+
 - Enter your research topic
 - Select research mode
 - Choose additional options
 - View comprehensive results
 
 ### Quick Research
+
 ```bash
 npm run research "Quantum Computing in Cryptography"
 npm run research "AI Ethics in Healthcare"
@@ -99,6 +105,7 @@ npm run research "Sustainable Energy Solutions"
 ```
 
 ### Demo Mode
+
 ```bash
 npm run demo
 ```
@@ -114,6 +121,7 @@ npm run demo
 ## 🎨 Sample Output
 
 The assistant generates beautifully formatted reports with:
+
 - Executive summaries
 - Detailed subtopic analysis
 - Key findings and insights
@@ -123,6 +131,7 @@ The assistant generates beautifully formatted reports with:
 ## 🔧 Customization
 
 Edit `src/config.js` to customize:
+
 - Ollama model selection
 - Research depth and breadth
 - UI colors and styling
@@ -132,7 +141,7 @@ Edit `src/config.js` to customize:
 
 - "Large Language Models in Code Generation"
 - "Climate Change Mitigation Technologies"
-- "Blockchain Applications in Supply Chain"  
+- "Blockchain Applications in Supply Chain"
 - "CRISPR Gene Editing Ethics"
 - "Quantum Computing Impact on Cryptography"
 

@@ -17,7 +17,12 @@
     "test": "npm run test:unit",
     "test:unit": "tsx --test src/__tests__/*.test.*",
     "web": "node dist/server.js",
-    "web-dev": "tsx watch server.ts"
+    "web-dev": "tsx watch server.ts",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
   },
   "keywords": [
     "ai",
@@ -40,10 +45,16 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
     "@types/inquirer": "^9.0.10",
     "@types/node": "^26.6.2",
+    "eslint": "^10.11.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.5.1",
+    "prettier": "^3.9.8",
     "tsx": "^4.23.15",
-    "typescript": "^7.0.2"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.70.0"
   }
 }

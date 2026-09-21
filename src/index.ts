@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 
-import { fileURLToPath } from 'url';
-import inquirer from 'inquirer';
-import { ResearchEngine } from './engine/research-engine.js';
-import { Logger, Formatter, Spinner } from './utils/helpers.js';
-import { researchModes } from './config.js';
+import { fileURLToPath } from "url";
+import inquirer from "inquirer";
+import { ResearchEngine } from "./engine/research-engine.js";
+import { Logger, Formatter, Spinner } from "./utils/helpers.js";
+import { researchModes } from "./config.js";
 import type {
   ResearchReport,
   TopicAnalysis,
   ResearchResults,
   ResearchMode,
   ProgressEvent,
-  ResearchPerformanceStats
-} from './contracts/schemas.js';
+  ResearchPerformanceStats,
+} from "./contracts/schemas.js";
 
 export interface SmartResearchAssistantOptions {
   engine?: ResearchEngine;
@@ -39,24 +39,28 @@ export class SmartResearchAssistant {
 
   async initialize(): Promise<boolean> {
     this.showWelcome();
-    Logger.info(`LLM Base URL: ${(this.engine.llm as unknown as { baseUrl?: string })?.baseUrl || 'http://localhost:11434'}`);
-    Logger.info('Standard instructions:');
-    Logger.info('1. Make sure Ollama is running: ollama serve');
-    Logger.info('2. Install a model: ollama pull llama3.1');
-    Logger.info('3. Run demo: npm run demo');
-    Logger.info('4. Start researching: npm start');
+    Logger.info(
+      `LLM Base URL: ${(this.engine.llm as unknown as { baseUrl?: string })?.baseUrl || "http://localhost:11434"}`
+    );
+    Logger.info("Standard instructions:");
+    Logger.info("1. Make sure Ollama is running: ollama serve");
+    Logger.info("2. Install a model: ollama pull llama3.1");
+    Logger.info("3. Run demo: npm run demo");
+    Logger.info("4. Start researching: npm start");
 
-    const spinner = new Spinner('Connecting to Ollama...').start();
+    const spinner = new Spinner("Connecting to Ollama...").start();
     const connected = await this.engine.checkConnection();
 
     if (!connected) {
-      spinner.fail('Connection failed');
-      Logger.error('Please ensure Ollama is running and you have the required model installed.');
-      Logger.info('To install a model, run: ollama pull llama3.1');
+      spinner.fail("Connection failed");
+      Logger.error(
+        "Please ensure Ollama is running and you have the required model installed."
+      );
+      Logger.info("To install a model, run: ollama pull llama3.1");
       process.exit(1);
     }
 
-    spinner.succeed('Connected to Ollama successfully');
+    spinner.succeed("Connected to Ollama successfully");
     return true;
   }
 
@@ -68,7 +72,7 @@ Powered by Ollama.js + Deep Architecture
 
 Your AI-powered research companion for comprehensive topic analysis.
     `;
-    console.log(Formatter.box(welcome.trim(), '🚀 Welcome'));
+    console.log(Formatter.box(welcome.trim(), "🚀 Welcome"));
   }
 
   createProgressHandler(): (event: ProgressEvent) => void {
@@ -78,43 +82,57 @@ Your AI-powered research companion for comprehensive topic analysis.
 
     return (event: ProgressEvent) => {
       switch (event.stage) {
-        case 'topic-analysis:start':
-          this.spinner = new Spinner(event.message || 'Analyzing research topic...').start();
+        case "topic-analysis:start":
+          this.spinner = new Spinner(
+            event.message || "Analyzing research topic..."
+          ).start();
           break;
-        case 'topic-analysis:done':
-          this.spinner?.succeed(event.message || 'Topic analysis complete');
+        case "topic-analysis:done":
+          this.spinner?.succeed(event.message || "Topic analysis complete");
           break;
-        case 'subtopics:start':
+        case "subtopics:start":
           Logger.title(`🔍 Conducting Research`);
           break;
-        case 'subtopic:start':
-          this.spinner = new Spinner(event.message || `Researching ${event.subtopic || 'subtopic'}...`).start();
+        case "subtopic:start":
+          this.spinner = new Spinner(
+            event.message || `Researching ${event.subtopic || "subtopic"}...`
+          ).start();
           break;
-        case 'subtopic:done':
-          this.spinner?.succeed(event.message || `Completed: ${event.subtopic || 'subtopic'}`);
+        case "subtopic:done":
+          this.spinner?.succeed(
+            event.message || `Completed: ${event.subtopic || "subtopic"}`
+          );
           break;
-        case 'subtopic:error':
-          this.spinner?.fail(`Failed: ${event.subtopic || 'subtopic'}`);
+        case "subtopic:error":
+          this.spinner?.fail(`Failed: ${event.subtopic || "subtopic"}`);
           break;
-        case 'synthesis:start':
-          this.spinner = new Spinner(event.message || 'Synthesizing research findings...').start();
+        case "synthesis:start":
+          this.spinner = new Spinner(
+            event.message || "Synthesizing research findings..."
+          ).start();
           break;
-        case 'synthesis:done':
-          this.spinner?.succeed(event.message || 'Research synthesis complete');
+        case "synthesis:done":
+          this.spinner?.succeed(event.message || "Research synthesis complete");
           break;
-        case 'followups:start':
-          this.spinner = new Spinner(event.message || 'Generating follow-up questions...').start();
+        case "followups:start":
+          this.spinner = new Spinner(
+            event.message || "Generating follow-up questions..."
+          ).start();
           break;
-        case 'followups:done':
-          this.spinner?.succeed(event.message || 'Follow-up questions generated');
+        case "followups:done":
+          this.spinner?.succeed(
+            event.message || "Follow-up questions generated"
+          );
           break;
-        case 'executive-summary:start':
-          this.spinner = new Spinner(event.message || 'Creating executive summary...').start();
+        case "executive-summary:start":
+          this.spinner = new Spinner(
+            event.message || "Creating executive summary..."
+          ).start();
           break;
-        case 'executive-summary:done':
-          this.spinner?.succeed(event.message || 'Executive summary complete');
+        case "executive-summary:done":
+          this.spinner?.succeed(event.message || "Executive summary complete");
           break;
-        case 'complete':
+        case "complete":
           break;
       }
     };
@@ -123,35 +141,36 @@ Your AI-powered research companion for comprehensive topic analysis.
   async getResearchInput(): Promise<InteractiveAnswers> {
     const questions = [
       {
-        type: 'input',
-        name: 'topic',
-        message: 'What topic would you like to research?',
-        validate: (input: string) => input.trim().length > 0 || 'Please enter a research topic'
+        type: "input",
+        name: "topic",
+        message: "What topic would you like to research?",
+        validate: (input: string) =>
+          input.trim().length > 0 || "Please enter a research topic",
       },
       {
-        type: 'list',
-        name: 'mode',
-        message: 'Select research mode:',
+        type: "list",
+        name: "mode",
+        message: "Select research mode:",
         choices: Object.entries(researchModes).map(([key, mode]) => ({
           name: `${mode.name} - ${mode.description}`,
-          value: key
-        }))
+          value: key,
+        })),
       },
       {
-        type: 'confirm',
-        name: 'includeFollowups',
-        message: 'Include follow-up questions?',
-        default: true
+        type: "confirm",
+        name: "includeFollowups",
+        message: "Include follow-up questions?",
+        default: true,
       },
       {
-        type: 'confirm',
-        name: 'includeSynthesis',
-        message: 'Include research synthesis?',
-        default: true
-      }
+        type: "confirm",
+        name: "includeSynthesis",
+        message: "Include research synthesis?",
+        default: true,
+      },
     ];
 
-    return await inquirer.prompt(questions) as InteractiveAnswers;
+    return (await inquirer.prompt(questions)) as InteractiveAnswers;
   }
 
   displayAllResults(results: ResearchReport): void {
@@ -178,35 +197,46 @@ Your AI-powered research companion for comprehensive topic analysis.
   }
 
   displayTopicAnalysis(analysis: TopicAnalysis): void {
-    console.log(Formatter.section('📋 Topic Analysis', analysis.overview));
-    console.log(Formatter.highlight('🎯 Research Subtopics:', 'cyan'));
+    console.log(Formatter.section("📋 Topic Analysis", analysis.overview));
+    console.log(Formatter.highlight("🎯 Research Subtopics:", "cyan"));
     (analysis.subtopics || []).forEach((subtopic, index) => {
-      console.log(`\n${index + 1}. ${Formatter.highlight(subtopic.title, 'white' as any)}`);
+      console.log(
+        `\n${index + 1}. ${Formatter.highlight(subtopic.title, "white")}`
+      );
       console.log(`   ${Formatter.dim(subtopic.description)}`);
-      console.log(`   ${Formatter.dim('Questions: ' + (subtopic.questions || []).join(', '))}`);
+      console.log(
+        `   ${Formatter.dim("Questions: " + (subtopic.questions || []).join(", "))}`
+      );
     });
-    console.log(`\n${Formatter.highlight('🔍 Key Research Questions:', 'cyan')}`);
+    console.log(
+      `\n${Formatter.highlight("🔍 Key Research Questions:", "cyan")}`
+    );
     console.log(Formatter.list(analysis.mainQuestions || []));
   }
 
   displayResearchResults(results: ResearchResults): void {
-    console.log(Formatter.section('📖 Research Findings', ''));
+    console.log(Formatter.section("📖 Research Findings", ""));
     Object.entries(results).forEach(([title, data]) => {
-      console.log(Formatter.highlight(`\n━━━ ${title} ━━━`, 'blue'));
+      console.log(Formatter.highlight(`\n━━━ ${title} ━━━`, "blue"));
       console.log(data.content);
     });
   }
 
   displaySynthesis(synthesis: string): void {
-    console.log(Formatter.section('🧠 Research Synthesis', synthesis));
+    console.log(Formatter.section("🧠 Research Synthesis", synthesis));
   }
 
   displayFollowUpQuestions(questions: string[]): void {
-    console.log(Formatter.section('❓ Follow-up Questions', Formatter.list(questions, true)));
+    console.log(
+      Formatter.section(
+        "❓ Follow-up Questions",
+        Formatter.list(questions, true)
+      )
+    );
   }
 
   displayExecutiveSummary(summary: string): void {
-    console.log(Formatter.box(summary, '📋 Executive Summary'));
+    console.log(Formatter.box(summary, "📋 Executive Summary"));
   }
 
   displayPerformanceStats(stats: ResearchPerformanceStats): void {
@@ -215,57 +245,63 @@ Model: ${stats.model}
 Total Time: ${stats.totalTime}
 Completed: ${stats.timestamp}
     `.trim();
-    console.log(Formatter.box(statsText, '⚡ Performance Stats'));
+    console.log(Formatter.box(statsText, "⚡ Performance Stats"));
   }
 
   async askForAnotherResearch(): Promise<boolean> {
     const { another } = await inquirer.prompt<{ another: boolean }>([
       {
-        type: 'confirm',
-        name: 'another',
-        message: 'Would you like to research another topic?',
-        default: false
-      }
+        type: "confirm",
+        name: "another",
+        message: "Would you like to research another topic?",
+        default: false,
+      },
     ]);
     return Boolean(another);
   }
 
-  async run(args: string[] = process.argv.slice(2)): Promise<ResearchReport | undefined> {
+  async run(
+    args: string[] = process.argv.slice(2)
+  ): Promise<ResearchReport | undefined> {
     try {
       // 1. Demo Mode (--demo flag)
-      if (args.includes('--demo')) {
+      if (args.includes("--demo")) {
         this.showWelcome();
-        const topic = 'Artificial Intelligence in Healthcare';
+        const topic = "Artificial Intelligence in Healthcare";
         if (!this.silent) {
-          Logger.title('🚀 Smart Research Assistant Demo');
+          Logger.title("🚀 Smart Research Assistant Demo");
           Logger.info(`📋 Demo Topic: ${Formatter.highlight(topic)}`);
         }
         const results = await this.engine.executeResearch(topic, {
-          mode: 'QUICK',
-          onProgress: this.createProgressHandler()
+          mode: "QUICK",
+          onProgress: this.createProgressHandler(),
         });
         this.displayAllResults(results);
         if (!this.silent) {
-          Logger.success(`⚡ Demo completed in ${results.performanceStats.totalTime}`);
+          Logger.success(
+            `⚡ Demo completed in ${results.performanceStats.totalTime}`
+          );
         }
         return results;
       }
 
       // 2. One-shot Quick Research via Command Line Arguments
-      const filteredArgs = args.filter((a) => !a.startsWith('--'));
+      const filteredArgs = args.filter((a) => !a.startsWith("--"));
       if (filteredArgs.length > 0) {
-        const topic = filteredArgs.join(' ');
+        const topic = filteredArgs.join(" ");
         this.showWelcome();
         if (!this.silent) {
           Logger.title(`🚀 Quick Research: ${Formatter.highlight(topic)}`);
         }
         const results = await this.engine.executeResearch(topic, {
-          mode: 'QUICK',
-          onProgress: this.createProgressHandler()
+          mode: "QUICK",
+          onProgress: this.createProgressHandler(),
         });
         this.displayAllResults(results);
         if (!this.silent) {
-          Logger.success(`Research completed in ${results.performanceStats.totalTime}`);
+          Logger.success(
+            `Research completed in ${results.performanceStats.totalTime}`
+          );
         }
         return results;
       }
@@ -277,23 +313,24 @@ Completed: ${stats.timestamp}
       while (continueResearch) {
         const options = await this.getResearchInput();
         if (!this.silent) {
-          Logger.title(`📊 Research Report: ${Formatter.highlight(options.topic)}`);
+          Logger.title(
+            `📊 Research Report: ${Formatter.highlight(options.topic)}`
+          );
         }
 
         const results = await this.engine.executeResearch(options.topic, {
           mode: options.mode,
           includeFollowups: options.includeFollowups,
           includeSynthesis: options.includeSynthesis,
-          onProgress: this.createProgressHandler()
+          onProgress: this.createProgressHandler(),
         });
 
         this.displayAllResults(results);
         continueResearch = await this.askForAnotherResearch();
       }
 
-      Logger.success('Thank you for using Smart Research Assistant! 🎉');
+      Logger.success("Thank you for using Smart Research Assistant! 🎉");
       return undefined;
-
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       Logger.error(`Application error: ${message}`);

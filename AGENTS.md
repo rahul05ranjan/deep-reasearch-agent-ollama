@@ -15,3 +15,7 @@ Default 5-role canonical triage labels (`needs-triage`, `needs-info`, `ready-for
 ### Domain docs
 
 Single-context layout (`CONTEXT.md` and `docs/adr/` at repo root). See `docs/agents/domain.md`.
+
+### Coding standards
+
+TypeScript conventions, Zod runtime contracts, and test fixtures. See `CODING_STANDARDS.md`.
