@@ -8,15 +8,14 @@ try {
   
   // Test basic functionality
   const fs = await import('fs');
-  const path = await import('path');
   
   // Check if key files exist
   const keyFiles = [
-    'src/config.js',
-    'src/engine/research-engine.js',
-    'src/adapters/llm-client.js',
-    'src/utils/helpers.js',
-    'src/prompts/templates.js'
+    'src/config.ts',
+    'src/engine/research-engine.ts',
+    'src/adapters/llm-client.ts',
+    'src/utils/helpers.ts',
+    'src/prompts/templates.ts'
   ];
   
   let allFilesExist = true;
@@ -41,6 +40,7 @@ try {
     console.log('\n❌ Some files are missing');
   }
   
-} catch (error) {
-  console.error('❌ Test failed:', error.message);
+} catch (error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  console.error('❌ Test failed:', message);
 }

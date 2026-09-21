@@ -37,8 +37,8 @@ describe('CLI SmartResearchAssistant Seam', () => {
 
   it('runs one-shot research directly from command line arguments', async () => {
     const engine = createTestEngine();
-    let executedTopic = null;
-    let executedOptions = null;
+    let executedTopic: string | null = null;
+    let executedOptions: any = null;
 
     const originalExecute = engine.executeResearch.bind(engine);
     engine.executeResearch = async (topic, options) => {
@@ -57,8 +57,8 @@ describe('CLI SmartResearchAssistant Seam', () => {
 
   it('runs demo research when --demo argument is passed', async () => {
     const engine = createTestEngine();
-    let executedTopic = null;
-    let executedMode = null;
+    let executedTopic: string | null = null;
+    let executedMode: any = null;
 
     const originalExecute = engine.executeResearch.bind(engine);
     engine.executeResearch = async (topic, options) => {

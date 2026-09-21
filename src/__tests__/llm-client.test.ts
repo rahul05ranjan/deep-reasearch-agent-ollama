@@ -64,7 +64,7 @@ describe('LLMClient Adapter Seam', () => {
       let listCalled = false;
 
       const mockOllama = {
-        generate: async (params) => {
+        generate: async (params: any) => {
           generateCalled = true;
           return { response: `Generated from ${params.model}` };
         },

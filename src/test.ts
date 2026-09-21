@@ -6,7 +6,7 @@ import { getPrompt } from './prompts/templates.js';
 
 // Simple test to validate project setup
 class ProjectTest {
-  async runTests() {
+  async runTests(): Promise<void> {
     Logger.title('🧪 Smart Research Assistant - Project Test');
     
     let passed = 0;
@@ -22,8 +22,9 @@ class ProjectTest {
       } else {
         Logger.error('❌ Configuration invalid');
       }
-    } catch (error) {
-      Logger.error(`❌ Configuration error: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      Logger.error(`❌ Configuration error: ${message}`);
     }
     
     // Test 2: Research modes
@@ -37,8 +38,9 @@ class ProjectTest {
       } else {
         Logger.error('❌ No research modes found');
       }
-    } catch (error) {
-      Logger.error(`❌ Research modes error: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      Logger.error(`❌ Research modes error: ${message}`);
     }
     
     // Test 3: Prompt templates
@@ -52,8 +54,9 @@ class ProjectTest {
       } else {
         Logger.error('❌ Prompt templates not working');
       }
-    } catch (error) {
-      Logger.error(`❌ Prompt templates error: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      Logger.error(`❌ Prompt templates error: ${message}`);
     }
     
     // Test 4: Utilities
@@ -67,8 +70,9 @@ class ProjectTest {
       } else {
         Logger.error('❌ Utility functions not working');
       }
-    } catch (error) {
-      Logger.error(`❌ Utility functions error: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      Logger.error(`❌ Utility functions error: ${message}`);
     }
     
     // Summary

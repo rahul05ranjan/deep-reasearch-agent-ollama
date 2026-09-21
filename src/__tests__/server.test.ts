@@ -1,13 +1,15 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import type { Server } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { ResearchServer } from '../../server.js';
 import { ResearchEngine } from '../engine/research-engine.js';
 import { FakeLLMAdapter } from '../adapters/llm-client.js';
 
 describe('ResearchServer HTTP API Seam', () => {
-  let serverInstance;
-  let httpServer;
-  let baseUrl;
+  let serverInstance: ResearchServer;
+  let httpServer: Server;
+  let baseUrl: string;
 
   const sampleTopicAnalysis = JSON.stringify({
     overview: 'Renewable energy overview',
@@ -49,10 +51,10 @@ describe('ResearchServer HTTP API Seam', () => {
 
     serverInstance = new ResearchServer({ engine, port: 0 });
 
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       httpServer = serverInstance.app.listen(0, () => {
-        const port = httpServer.address().port;
-        baseUrl = `http://localhost:${port}`;
+        const addr = httpServer.address() as AddressInfo;
+        baseUrl = `http://localhost:${addr.port}`;
         resolve();
       });
     });
@@ -118,8 +120,8 @@ describe('ResearchServer HTTP API Seam', () => {
 
     await new Promise((resolve) => {
       const s = disconnectedServer.app.listen(0, async () => {
-        const port = s.address().port;
-        const res = await fetch(`http://localhost:${port}/api/research`, {
+        const addr = s.address() as AddressInfo;
+        const res = await fetch(`http://localhost:${addr.port}/api/research`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ topic: 'Some Topic' })
