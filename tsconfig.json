@@ -7,13 +7,13 @@
     "verbatimModuleSyntax": true,
     "sourceMap": true,
     "outDir": "dist",
-    "allowJs": true,
+    "allowJs": false,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
   "include": [
     "src/**/*",
-    "server.js"
+    "server.ts"
   ],
   "exclude": [
     "node_modules",
