@@ -1,4 +1,5 @@
 import express, { type Express, type Request, type Response, type NextFunction } from 'express';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { ResearchEngine } from './src/engine/research-engine.js';
@@ -7,6 +8,14 @@ import { ResearchRequestSchema } from './src/contracts/schemas.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const getPublicDir = (): string => {
+  const directPublic = path.join(__dirname, 'public');
+  if (fs.existsSync(directPublic)) return directPublic;
+  const parentPublic = path.join(__dirname, '..', 'public');
+  if (fs.existsSync(parentPublic)) return parentPublic;
+  return directPublic;
+};
 
 export interface ResearchServerOptions {
   port?: number | string;
@@ -44,7 +53,7 @@ export class ResearchServer {
     this.app.use(express.json());
 
     // Serve static files from public directory
-    this.app.use(express.static(path.join(__dirname, 'public')));
+    this.app.use(express.static(getPublicDir()));
 
     // Request logging
     this.app.use((req: Request, _res: Response, next: NextFunction) => {
@@ -137,7 +146,7 @@ export class ResearchServer {
 
     // Serve the main page
     this.app.get('/', (_req: Request, res: Response) => {
-      res.sendFile(path.join(__dirname, 'public', 'index.html'));
+      res.sendFile(path.join(getPublicDir(), 'index.html'));
     });
 
     // 404 handler
