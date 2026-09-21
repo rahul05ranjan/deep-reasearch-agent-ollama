@@ -1,47 +1,99 @@
 #!/usr/bin/env node
 
+import { fileURLToPath } from 'url';
 import inquirer from 'inquirer';
-import { ResearchAgent } from './agents/research-agent.js';
+import { ResearchEngine } from './engine/research-engine.js';
 import { Logger, Formatter, Spinner } from './utils/helpers.js';
-import { config, researchModes } from './config.js';
+import { researchModes } from './config.js';
 
-class SmartResearchAssistant {
-  constructor() {
-    this.agent = new ResearchAgent();
+export class SmartResearchAssistant {
+  constructor(options = {}) {
+    this.engine = options.engine || new ResearchEngine();
+    this.silent = options.silent || false;
+    this.spinner = null;
   }
 
   async initialize() {
     this.showWelcome();
-    Logger.info(`Ollama base URL: ${this.agent?.ollama?.host || 'http://localhost:11434'}`);
+    Logger.info(`LLM Base URL: ${this.engine.llm?.baseUrl || 'http://localhost:11434'}`);
     Logger.info('Standard instructions:');
     Logger.info('1. Make sure Ollama is running: ollama serve');
     Logger.info('2. Install a model: ollama pull llama3.1');
     Logger.info('3. Run demo: npm run demo');
     Logger.info('4. Start researching: npm start');
-    
+
     const spinner = new Spinner('Connecting to Ollama...').start();
-    const connected = await this.agent.checkConnection();
-    
+    const connected = await this.engine.checkConnection();
+
     if (!connected) {
       spinner.fail('Connection failed');
       Logger.error('Please ensure Ollama is running and you have the required model installed.');
       Logger.info('To install a model, run: ollama pull llama3.1');
       process.exit(1);
     }
-    
+
     spinner.succeed('Connected to Ollama successfully');
     return true;
   }
 
   showWelcome() {
+    if (this.silent) return;
     const welcome = `
 🤖 Smart Research Assistant
-Powered by Ollama.js + LangChain.js
+Powered by Ollama.js + Deep Architecture
 
 Your AI-powered research companion for comprehensive topic analysis.
     `;
-    
     console.log(Formatter.box(welcome.trim(), '🚀 Welcome'));
+  }
+
+  createProgressHandler() {
+    if (this.silent) {
+      return () => {};
+    }
+
+    return (event) => {
+      switch (event.stage) {
+        case 'topic-analysis:start':
+          this.spinner = new Spinner(event.message || 'Analyzing research topic...').start();
+          break;
+        case 'topic-analysis:done':
+          this.spinner?.succeed(event.message || 'Topic analysis complete');
+          break;
+        case 'subtopics:start':
+          Logger.title(`🔍 Conducting Research`);
+          break;
+        case 'subtopic:start':
+          this.spinner = new Spinner(event.message || `Researching ${event.title}...`).start();
+          break;
+        case 'subtopic:done':
+          this.spinner?.succeed(event.message || `Completed: ${event.title}`);
+          break;
+        case 'subtopic:error':
+          this.spinner?.fail(`Failed: ${event.title}`);
+          break;
+        case 'synthesis:start':
+          this.spinner = new Spinner(event.message || 'Synthesizing research findings...').start();
+          break;
+        case 'synthesis:done':
+          this.spinner?.succeed(event.message || 'Research synthesis complete');
+          break;
+        case 'followups:start':
+          this.spinner = new Spinner(event.message || 'Generating follow-up questions...').start();
+          break;
+        case 'followups:done':
+          this.spinner?.succeed(event.message || 'Follow-up questions generated');
+          break;
+        case 'executive-summary:start':
+          this.spinner = new Spinner(event.message || 'Creating executive summary...').start();
+          break;
+        case 'executive-summary:done':
+          this.spinner?.succeed(event.message || 'Executive summary complete');
+          break;
+        case 'complete':
+          break;
+      }
+    };
   }
 
   async getResearchInput() {
@@ -78,81 +130,43 @@ Your AI-powered research companion for comprehensive topic analysis.
     return await inquirer.prompt(questions);
   }
 
-  async performResearch(options) {
-    const { topic, mode, includeFollowups, includeSynthesis } = options;
-    
-    Logger.title(`📊 Research Report: ${Formatter.highlight(topic)}`);
-    
-    try {
-      // Step 1: Analyze the topic
-      Logger.subtitle('Step 1: Analyzing Research Topic');
-      const analysis = await this.agent.analyzeResearchTopic(topic, mode);
-      
-      this.displayTopicAnalysis(analysis);
-      
-      // Step 2: Conduct detailed research
-      Logger.subtitle('Step 2: Conducting Detailed Research');
-      const researchResults = await this.agent.conductResearch(
-        topic, 
-        analysis.subtopics, 
-        mode
-      );
-      
-      this.displayResearchResults(researchResults);
-      
-      // Step 3: Generate synthesis (if requested)
-      let synthesis = null;
-      if (includeSynthesis) {
-        Logger.subtitle('Step 3: Synthesizing Findings');
-        synthesis = await this.agent.synthesizeFindings(topic, researchResults);
-        this.displaySynthesis(synthesis);
-      }
-      
-      // Step 4: Generate follow-up questions (if requested)
-      if (includeFollowups) {
-        Logger.subtitle('Step 4: Generating Follow-up Questions');
-        const followUps = await this.agent.generateFollowUpQuestions(
-          topic, 
-          synthesis || Object.values(researchResults).map(r => r.content).join('\n')
-        );
-        this.displayFollowUpQuestions(followUps);
-      }
-      
-      // Step 5: Create executive summary
-      Logger.subtitle('Step 5: Creating Executive Summary');
-      const fullResearch = Object.entries(researchResults)
-        .map(([title, data]) => `${title}: ${data.content}`)
-        .join('\n\n');
-      
-      const executiveSummary = await this.agent.createExecutiveSummary(topic, fullResearch);
-      this.displayExecutiveSummary(executiveSummary);
-      
-      // Performance stats
-      this.displayPerformanceStats();
-      
-    } catch (error) {
-      Logger.error(`Research failed: ${error.message}`);
-      throw error;
+  displayAllResults(results) {
+    if (this.silent) return;
+
+    if (results.analysis) {
+      this.displayTopicAnalysis(results.analysis);
+    }
+    if (results.researchResults) {
+      this.displayResearchResults(results.researchResults);
+    }
+    if (results.synthesis) {
+      this.displaySynthesis(results.synthesis);
+    }
+    if (results.followupQuestions) {
+      this.displayFollowUpQuestions(results.followupQuestions);
+    }
+    if (results.executiveSummary) {
+      this.displayExecutiveSummary(results.executiveSummary);
+    }
+    if (results.performanceStats) {
+      this.displayPerformanceStats(results.performanceStats);
     }
   }
 
   displayTopicAnalysis(analysis) {
     console.log(Formatter.section('📋 Topic Analysis', analysis.overview));
-    
     console.log(Formatter.highlight('🎯 Research Subtopics:', 'cyan'));
-    analysis.subtopics.forEach((subtopic, index) => {
+    (analysis.subtopics || []).forEach((subtopic, index) => {
       console.log(`\n${index + 1}. ${Formatter.highlight(subtopic.title, 'white')}`);
       console.log(`   ${Formatter.dim(subtopic.description)}`);
-      console.log(`   ${Formatter.dim('Questions: ' + subtopic.questions.join(', '))}`);
+      console.log(`   ${Formatter.dim('Questions: ' + (subtopic.questions || []).join(', '))}`);
     });
-    
     console.log(`\n${Formatter.highlight('🔍 Key Research Questions:', 'cyan')}`);
-    console.log(Formatter.list(analysis.mainQuestions));
+    console.log(Formatter.list(analysis.mainQuestions || []));
   }
 
   displayResearchResults(results) {
     console.log(Formatter.section('📖 Research Findings', ''));
-    
     Object.entries(results).forEach(([title, data]) => {
       console.log(Formatter.highlight(`\n━━━ ${title} ━━━`, 'blue'));
       console.log(data.content);
@@ -164,24 +178,19 @@ Your AI-powered research companion for comprehensive topic analysis.
   }
 
   displayFollowUpQuestions(questions) {
-    console.log(Formatter.section(
-      '❓ Follow-up Questions', 
-      Formatter.list(questions, true)
-    ));
+    console.log(Formatter.section('❓ Follow-up Questions', Formatter.list(questions, true)));
   }
 
   displayExecutiveSummary(summary) {
     console.log(Formatter.box(summary, '📋 Executive Summary'));
   }
 
-  displayPerformanceStats() {
-    const stats = this.agent.getPerformanceStats();
+  displayPerformanceStats(stats) {
     const statsText = `
 Model: ${stats.model}
 Total Time: ${stats.totalTime}
 Completed: ${stats.timestamp}
     `.trim();
-    
     console.log(Formatter.box(statsText, '⚡ Performance Stats'));
   }
 
@@ -194,34 +203,84 @@ Completed: ${stats.timestamp}
         default: false
       }
     ]);
-    
     return another;
   }
 
-  async run() {
+  async run(args = process.argv.slice(2)) {
     try {
+      // 1. Demo Mode (--demo flag)
+      if (args.includes('--demo')) {
+        this.showWelcome();
+        const topic = 'Artificial Intelligence in Healthcare';
+        if (!this.silent) {
+          Logger.title('🚀 Smart Research Assistant Demo');
+          Logger.info(`📋 Demo Topic: ${Formatter.highlight(topic)}`);
+        }
+        const results = await this.engine.executeResearch(topic, {
+          mode: 'QUICK',
+          onProgress: this.createProgressHandler()
+        });
+        this.displayAllResults(results);
+        if (!this.silent) {
+          Logger.success(`⚡ Demo completed in ${results.performanceStats.totalTime}`);
+        }
+        return results;
+      }
+
+      // 2. One-shot Quick Research via Command Line Arguments
+      const filteredArgs = args.filter((a) => !a.startsWith('--'));
+      if (filteredArgs.length > 0) {
+        const topic = filteredArgs.join(' ');
+        this.showWelcome();
+        if (!this.silent) {
+          Logger.title(`🚀 Quick Research: ${Formatter.highlight(topic)}`);
+        }
+        const results = await this.engine.executeResearch(topic, {
+          mode: 'QUICK',
+          onProgress: this.createProgressHandler()
+        });
+        this.displayAllResults(results);
+        if (!this.silent) {
+          Logger.success(`Research completed in ${results.performanceStats.totalTime}`);
+        }
+        return results;
+      }
+
+      // 3. Interactive Wizard (No Arguments)
       await this.initialize();
-      
       let continueResearch = true;
-      
+
       while (continueResearch) {
         const options = await this.getResearchInput();
-        await this.performResearch(options);
-        
+        if (!this.silent) {
+          Logger.title(`📊 Research Report: ${Formatter.highlight(options.topic)}`);
+        }
+
+        const results = await this.engine.executeResearch(options.topic, {
+          mode: options.mode,
+          includeFollowups: options.includeFollowups,
+          includeSynthesis: options.includeSynthesis,
+          onProgress: this.createProgressHandler()
+        });
+
+        this.displayAllResults(results);
         continueResearch = await this.askForAnotherResearch();
       }
-      
+
       Logger.success('Thank you for using Smart Research Assistant! 🎉');
-      
+
     } catch (error) {
       Logger.error(`Application error: ${error.message}`);
-      process.exit(1);
+      if (!this.silent) {
+        process.exit(1);
+      }
+      throw error;
     }
   }
 }
 
-// Run the application
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Run the application directly when executed as a script
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const app = new SmartResearchAssistant();
   app.run().catch(console.error);
 }
