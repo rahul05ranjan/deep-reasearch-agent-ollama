@@ -2,6 +2,7 @@ import { config, researchModes } from '../config.js';
 import { OllamaAdapter } from '../adapters/llm-client.js';
 import { getPrompt } from '../prompts/templates.js';
 import { Timer } from '../utils/helpers.js';
+import { TopicAnalysisSchema } from '../contracts/schemas.js';
 
 /**
  * Deep, headless research engine consolidating research pipeline execution.
@@ -125,7 +126,11 @@ export class ResearchEngine {
     try {
       const jsonMatch = response.response.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+        const rawJson = JSON.parse(jsonMatch[0]);
+        const parseResult = TopicAnalysisSchema.safeParse(rawJson);
+        if (parseResult.success) {
+          return parseResult.data;
+        }
       }
     } catch {
       // Fall through to fallback parsing
