@@ -1,7 +1,6 @@
 // Prompt templates for different research tasks
 
 export const prompts = {
-  
   // Analyze and structure a research topic
   topicAnalysis: `You are an expert research analyst. Given a research topic, break it down into key subtopics that should be explored.
 
@@ -94,13 +93,15 @@ The summary should be 3-4 paragraphs that capture:
 3. Most significant conclusions
 4. Areas for future consideration
 
-Write for a business/academic audience who needs to quickly understand the essential points.`
-
+Write for a business/academic audience who needs to quickly understand the essential points.`,
 };
 
 export type PromptTemplateName = keyof typeof prompts;
 
-export const getPrompt = (templateName: PromptTemplateName | string, variables: Record<string, unknown> = {}): string => {
+export const getPrompt = (
+  templateName: PromptTemplateName | string,
+  variables: Record<string, unknown> = {}
+): string => {
   const template = prompts[templateName as PromptTemplateName];
   if (!template) {
     throw new Error(`Prompt template "${templateName}" not found`);
@@ -108,9 +109,8 @@ export const getPrompt = (templateName: PromptTemplateName | string, variables: 
 
   let prompt = template;
   for (const [key, value] of Object.entries(variables)) {
-    prompt = prompt.replace(new RegExp(`{${key}}`, 'g'), String(value));
+    prompt = prompt.replace(new RegExp(`{${key}}`, "g"), String(value));
   }
 
   return prompt;
 };
-

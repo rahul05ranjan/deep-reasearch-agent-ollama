@@ -1,44 +1,44 @@
-import { describe, it } from 'node:test';
-import assert from 'node:assert/strict';
-import { SmartResearchAssistant } from '../index.js';
-import { FakeLLMAdapter } from '../adapters/llm-client.js';
-import { ResearchEngine } from '../engine/research-engine.js';
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { SmartResearchAssistant } from "../index.js";
+import { FakeLLMAdapter } from "../adapters/llm-client.js";
+import { ResearchEngine } from "../engine/research-engine.js";
 
-describe('CLI SmartResearchAssistant Seam', () => {
+describe("CLI SmartResearchAssistant Seam", () => {
   const sampleTopicAnalysis = JSON.stringify({
-    overview: 'Quantum computing uses quantum mechanics.',
+    overview: "Quantum computing uses quantum mechanics.",
     subtopics: [
       {
-        title: 'Qubits and Superposition',
-        description: 'Basic computational units',
-        questions: ['What is superposition?']
-      }
+        title: "Qubits and Superposition",
+        description: "Basic computational units",
+        questions: ["What is superposition?"],
+      },
     ],
-    mainQuestions: ['How will quantum computers impact cryptography?']
+    mainQuestions: ["How will quantum computers impact cryptography?"],
   });
 
   function createTestEngine() {
     const fakeLLM = new FakeLLMAdapter({
       responses: [
         sampleTopicAnalysis,
-        'Qubits can exist in multiple states simultaneously.',
-        'Synthesis: Quantum computing promises exponential speedup.',
-        '1. When will fault-tolerant quantum computers arrive?',
-        'Executive Summary: Quantum computing leverages quantum principles.'
+        "Qubits can exist in multiple states simultaneously.",
+        "Synthesis: Quantum computing promises exponential speedup.",
+        "1. When will fault-tolerant quantum computers arrive?",
+        "Executive Summary: Quantum computing leverages quantum principles.",
       ],
-      models: [{ name: 'qwen2.5-coder:0.5b' }]
+      models: [{ name: "qwen2.5-coder:0.5b" }],
     });
 
     return new ResearchEngine({
       llmClient: fakeLLM,
-      model: 'qwen2.5-coder:0.5b'
+      model: "qwen2.5-coder:0.5b",
     });
   }
 
-  it('runs one-shot research directly from command line arguments', async () => {
+  it("runs one-shot research directly from command line arguments", async () => {
     const engine = createTestEngine();
     let executedTopic: string | null = null;
-    let executedOptions: any = null;
+    let executedOptions: { mode?: string } | undefined = undefined;
 
     const originalExecute = engine.executeResearch.bind(engine);
     engine.executeResearch = async (topic, options) => {
@@ -48,17 +48,20 @@ describe('CLI SmartResearchAssistant Seam', () => {
     };
 
     const app = new SmartResearchAssistant({ engine, silent: true });
-    await app.run(['Quantum Computing']);
+    await app.run(["Quantum Computing"]);
 
-    assert.equal(executedTopic, 'Quantum Computing');
+    assert.equal(executedTopic, "Quantum Computing");
     assert.ok(executedOptions);
-    assert.equal(executedOptions.mode, 'QUICK');
+    assert.equal(
+      (executedOptions as { mode?: string } | undefined)?.mode,
+      "QUICK"
+    );
   });
 
-  it('runs demo research when --demo argument is passed', async () => {
+  it("runs demo research when --demo argument is passed", async () => {
     const engine = createTestEngine();
     let executedTopic: string | null = null;
-    let executedMode: any = null;
+    let executedMode: string | undefined = undefined;
 
     const originalExecute = engine.executeResearch.bind(engine);
     engine.executeResearch = async (topic, options) => {
@@ -68,33 +71,43 @@ describe('CLI SmartResearchAssistant Seam', () => {
     };
 
     const app = new SmartResearchAssistant({ engine, silent: true });
-    await app.run(['--demo']);
+    await app.run(["--demo"]);
 
-    assert.equal(executedTopic, 'Artificial Intelligence in Healthcare');
-    assert.equal(executedMode, 'QUICK');
+    assert.equal(executedTopic, "Artificial Intelligence in Healthcare");
+    assert.equal(executedMode, "QUICK");
   });
 
-  it('hooks progress events to terminal spinner without error', async () => {
+  it("hooks progress events to terminal spinner without error", async () => {
     const engine = createTestEngine();
     const app = new SmartResearchAssistant({ engine, silent: true });
 
     // Verify progress handler works across all lifecycle stages
     const handler = app.createProgressHandler();
-    assert.equal(typeof handler, 'function');
+    assert.equal(typeof handler, "function");
 
     assert.doesNotThrow(() => {
-      handler({ stage: 'topic-analysis:start', message: 'Analyzing...' });
-      handler({ stage: 'topic-analysis:done', message: 'Done' });
-      handler({ stage: 'subtopics:start', totalSteps: 2 });
-      handler({ stage: 'subtopic:start', step: 1, totalSteps: 2, title: 'Qubits' });
-      handler({ stage: 'subtopic:done', step: 1, totalSteps: 2, title: 'Qubits' });
-      handler({ stage: 'synthesis:start' });
-      handler({ stage: 'synthesis:done' });
-      handler({ stage: 'followups:start' });
-      handler({ stage: 'followups:done' });
-      handler({ stage: 'executive-summary:start' });
-      handler({ stage: 'executive-summary:done' });
-      handler({ stage: 'complete' });
+      handler({ stage: "topic-analysis:start", message: "Analyzing..." });
+      handler({ stage: "topic-analysis:done", message: "Done" });
+      handler({ stage: "subtopics:start", totalSteps: 2 });
+      handler({
+        stage: "subtopic:start",
+        step: 1,
+        totalSteps: 2,
+        title: "Qubits",
+      });
+      handler({
+        stage: "subtopic:done",
+        step: 1,
+        totalSteps: 2,
+        title: "Qubits",
+      });
+      handler({ stage: "synthesis:start" });
+      handler({ stage: "synthesis:done" });
+      handler({ stage: "followups:start" });
+      handler({ stage: "followups:done" });
+      handler({ stage: "executive-summary:start" });
+      handler({ stage: "executive-summary:done" });
+      handler({ stage: "complete" });
     });
   });
 });

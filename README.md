@@ -38,22 +38,27 @@ A powerful AI research assistant built with Ollama.js that helps you conduct com
 ## Usage
 
 ### Web Interface (Recommended)
+
 ```bash
 npm run web
 ```
+
 Then open http://localhost:3000 in your browser
 
 ### Interactive CLI Mode
+
 ```bash
 npm start
 ```
 
 ### Direct Research Mode
+
 ```bash
 npm run research "Your Research Topic"
 ```
 
 ### Demo Mode
+
 ```bash
 npm run demo
 ```
@@ -77,6 +82,7 @@ npm run demo
 ## Architecture
 
 The agent uses a multi-step approach:
+
 1. **Topic Analysis**: Ollama analyzes and structures the research topic
 2. **Research Planning**: Creates a research plan with subtopics
 3. **Information Gathering**: Uses Ollama to generate comprehensive content
@@ -86,6 +92,7 @@ The agent uses a multi-step approach:
 ## Configuration
 
 Edit `src/config.js` to customize:
+
 - Ollama model selection
 - Research depth
 - Output format preferences
