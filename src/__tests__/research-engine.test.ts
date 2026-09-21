@@ -48,10 +48,10 @@ describe('ResearchEngine Seam', () => {
     assert.equal(result.analysis.subtopics.length, 2);
     assert.ok(result.researchResults['Diagnostic Imaging']);
     assert.ok(result.researchResults['Drug Discovery']);
-    assert.ok(result.synthesis.includes('Synthesis:'));
+    assert.ok(result.synthesis?.includes('Synthesis:'));
     assert.ok(Array.isArray(result.followupQuestions));
     assert.ok(result.followupQuestions.length > 0);
-    assert.ok(result.executiveSummary.includes('Executive Summary'));
+    assert.ok(result.executiveSummary?.includes('Executive Summary'));
     assert.ok(result.performanceStats);
     assert.equal(result.performanceStats.model, 'test-model');
   });
@@ -68,7 +68,7 @@ describe('ResearchEngine Seam', () => {
       ]
     });
 
-    const events = [];
+    const events: any[] = [];
     const engine = new ResearchEngine({ llmClient: fakeLLM });
 
     await engine.executeResearch('AI in Healthcare', {
