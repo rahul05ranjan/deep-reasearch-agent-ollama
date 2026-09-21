@@ -1,5 +1,41 @@
+import type { ResearchMode } from './contracts/schemas.js';
+
+export interface OllamaOptions {
+  temperature?: number;
+  top_p?: number;
+  num_predict?: number;
+}
+
+export interface OllamaConfig {
+  baseUrl: string;
+  model: string;
+  options: OllamaOptions;
+}
+
+export interface AppConfig {
+  ollama: OllamaConfig;
+  research: {
+    maxSubtopics: number;
+    summaryLength: string;
+    includeFollowUps: boolean;
+    includeSourceSuggestions: boolean;
+  };
+  ui: {
+    colors: Record<string, string>;
+    animations: boolean;
+    boxStyle: string;
+  };
+}
+
+export interface ModeConfig {
+  name: string;
+  description: string;
+  subtopics: number;
+  depth: 'low' | 'medium' | 'high';
+}
+
 // Configuration for the Smart Research Assistant
-export const config = {
+export const config: AppConfig = {
   // Ollama settings
   ollama: {
     baseUrl: 'http://localhost:11434',
@@ -35,7 +71,7 @@ export const config = {
 };
 
 // Available research modes
-export const researchModes = {
+export const researchModes: Record<ResearchMode, ModeConfig> = {
   COMPREHENSIVE: {
     name: 'Comprehensive Research',
     description: 'Deep dive into all aspects of the topic',
