@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { type Express, type Request, type Response, type NextFunction } from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { ResearchEngine } from './src/engine/research-engine.js';
@@ -8,8 +8,17 @@ import { ResearchRequestSchema } from './src/contracts/schemas.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+export interface ResearchServerOptions {
+  port?: number | string;
+  engine?: ResearchEngine;
+}
+
 export class ResearchServer {
-  constructor(options = {}) {
+  app: Express;
+  port: number | string;
+  engine: ResearchEngine;
+
+  constructor(options: ResearchServerOptions = {}) {
     this.app = express();
     this.port = options.port ?? (process.env.PORT || 3000);
     this.engine = options.engine || new ResearchEngine();
@@ -18,13 +27,13 @@ export class ResearchServer {
     this.setupRoutes();
   }
 
-  setupMiddleware() {
+  setupMiddleware(): void {
     // Enable CORS manually
-    this.app.use((req, res, next) => {
+    this.app.use((_req: Request, res: Response, next: NextFunction) => {
       res.header('Access-Control-Allow-Origin', '*');
       res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
       res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-      if (req.method === 'OPTIONS') {
+      if (_req.method === 'OPTIONS') {
         res.sendStatus(200);
       } else {
         next();
@@ -38,15 +47,15 @@ export class ResearchServer {
     this.app.use(express.static(path.join(__dirname, 'public')));
 
     // Request logging
-    this.app.use((req, res, next) => {
+    this.app.use((req: Request, _res: Response, next: NextFunction) => {
       console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
       next();
     });
   }
 
-  setupRoutes() {
+  setupRoutes(): void {
     // Health check endpoint
-    this.app.get('/api/health', async (req, res) => {
+    this.app.get('/api/health', async (_req: Request, res: Response) => {
       try {
         const connected = await this.engine.checkConnection();
         res.json({
@@ -54,21 +63,22 @@ export class ResearchServer {
           ollamaConnected: connected,
           timestamp: new Date().toISOString()
         });
-      } catch (error) {
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
         res.status(500).json({
           status: 'error',
-          error: error.message,
+          error: message,
           ollamaConnected: false
         });
       }
     });
 
     // Research endpoint
-    this.app.post('/api/research', async (req, res) => {
+    this.app.post('/api/research', async (req: Request, res: Response) => {
       try {
         const parseResult = ResearchRequestSchema.safeParse(req.body);
         if (!parseResult.success) {
-          const firstError = parseResult.error.issues?.[0]?.message || parseResult.error.errors?.[0]?.message || 'Invalid research request';
+          const firstError = parseResult.error.issues?.[0]?.message || 'Invalid research request';
           return res.status(400).json({
             error: firstError
           });
@@ -94,19 +104,20 @@ export class ResearchServer {
         });
 
         Logger.success(`✅ Research completed: ${topic}`);
-        res.json(results);
+        return res.json(results);
 
-      } catch (error) {
-        Logger.error(`❌ Research failed: ${error.message}`);
-        res.status(500).json({
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        Logger.error(`❌ Research failed: ${message}`);
+        return res.status(500).json({
           error: 'Research failed',
-          details: error.message
+          details: message
         });
       }
     });
 
     // Models endpoint - list available Ollama models
-    this.app.get('/api/models', async (req, res) => {
+    this.app.get('/api/models', async (_req: Request, res: Response) => {
       try {
         const response = await this.engine.llm.listModels();
         const models = (response.models || []).map((model) => ({
@@ -115,21 +126,22 @@ export class ResearchServer {
           modified: model.modified_at || model.modified
         }));
         res.json({ models });
-      } catch (error) {
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
         res.status(500).json({
           error: 'Failed to fetch models',
-          details: error.message
+          details: message
         });
       }
     });
 
     // Serve the main page
-    this.app.get('/', (req, res) => {
+    this.app.get('/', (_req: Request, res: Response) => {
       res.sendFile(path.join(__dirname, 'public', 'index.html'));
     });
 
     // 404 handler
-    this.app.use((req, res) => {
+    this.app.use((req: Request, res: Response) => {
       res.status(404).json({
         error: 'Not found',
         path: req.path
@@ -137,21 +149,21 @@ export class ResearchServer {
     });
 
     // Error handler
-    this.app.use((error, req, res, _next) => {
-      if (error.status === 400 || error instanceof SyntaxError || error.type === 'entity.parse.failed') {
+    this.app.use((error: any, _req: Request, res: Response, _next: NextFunction) => {
+      if (error?.status === 400 || error instanceof SyntaxError || error?.type === 'entity.parse.failed') {
         return res.status(400).json({
           error: 'Invalid JSON body'
         });
       }
       console.error('Server error:', error);
-      res.status(500).json({
+      return res.status(500).json({
         error: 'Internal server error',
-        details: error.message
+        details: error?.message || String(error)
       });
     });
   }
 
-  async start() {
+  async start(): Promise<void> {
     try {
       // Check Ollama connection on startup
       Logger.info('🔧 Checking Ollama connection...');
@@ -169,8 +181,9 @@ export class ResearchServer {
         Logger.info('📖 Open your browser and start researching!');
       });
 
-    } catch (error) {
-      Logger.error(`❌ Failed to start server: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      Logger.error(`❌ Failed to start server: ${message}`);
       process.exit(1);
     }
   }

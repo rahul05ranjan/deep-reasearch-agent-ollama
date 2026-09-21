@@ -98,16 +98,19 @@ Write for a business/academic audience who needs to quickly understand the essen
 
 };
 
-export const getPrompt = (templateName, variables = {}) => {
-  const template = prompts[templateName];
+export type PromptTemplateName = keyof typeof prompts;
+
+export const getPrompt = (templateName: PromptTemplateName | string, variables: Record<string, unknown> = {}): string => {
+  const template = prompts[templateName as PromptTemplateName];
   if (!template) {
     throw new Error(`Prompt template "${templateName}" not found`);
   }
 
   let prompt = template;
   for (const [key, value] of Object.entries(variables)) {
-    prompt = prompt.replace(new RegExp(`{${key}}`, 'g'), value);
+    prompt = prompt.replace(new RegExp(`{${key}}`, 'g'), String(value));
   }
 
   return prompt;
 };
+
