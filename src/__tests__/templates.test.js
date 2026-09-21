@@ -1,9 +1,11 @@
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import { getPrompt } from '../prompts/templates.js';
 
 describe('Prompt Templates', () => {
-  test('getPrompt should return a string containing topic and mode', () => {
+  it('getPrompt should return a string containing topic and mode', () => {
     const prompt = getPrompt('topicAnalysis', { topic: 'Test', mode: 'Test' });
-    expect(typeof prompt).toBe('string');
-    expect(prompt).toContain('Test');
+    assert.equal(typeof prompt, 'string');
+    assert.ok(prompt.includes('Test'));
   });
 });

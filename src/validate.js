@@ -13,7 +13,8 @@ try {
   // Check if key files exist
   const keyFiles = [
     'src/config.js',
-    'src/agents/research-agent.js',
+    'src/engine/research-engine.js',
+    'src/adapters/llm-client.js',
     'src/utils/helpers.js',
     'src/prompts/templates.js'
   ];
