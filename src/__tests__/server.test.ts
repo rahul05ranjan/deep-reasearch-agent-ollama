@@ -1,13 +1,15 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import type { Server } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { ResearchServer } from '../../server.js';
 import { ResearchEngine } from '../engine/research-engine.js';
 import { FakeLLMAdapter } from '../adapters/llm-client.js';
 
 describe('ResearchServer HTTP API Seam', () => {
-  let serverInstance;
-  let httpServer;
-  let baseUrl;
+  let serverInstance: ResearchServer;
+  let httpServer: Server;
+  let baseUrl: string;
 
   const sampleTopicAnalysis = JSON.stringify({
     overview: 'Renewable energy overview',
@@ -23,13 +25,22 @@ describe('ResearchServer HTTP API Seam', () => {
 
   before(async () => {
     const fakeLLM = new FakeLLMAdapter({
-      responses: [
-        sampleTopicAnalysis,
-        'Solar cells convert photons into electricity.',
-        'Synthesis: Solar power is expanding rapidly.',
-        '1. What are battery storage options?',
-        'Executive Summary: Solar power provides clean, scalable energy.'
-      ],
+      defaultResponse: 'Executive Summary: Clean energy is scalable.',
+      handler: async (params) => {
+        if (params.prompt?.includes('expert research analyst')) {
+          return sampleTopicAnalysis;
+        }
+        if (params.prompt?.includes('comprehensive synthesis')) {
+          return 'Synthesis: Solar power is expanding rapidly.';
+        }
+        if (params.prompt?.includes('follow-up questions')) {
+          return '1. What are battery storage options?\n2. What about grid reliability?';
+        }
+        if (params.prompt?.includes('executive summary')) {
+          return 'Executive Summary: Solar power provides clean, scalable energy.';
+        }
+        return 'Solar cells convert photons into electricity.';
+      },
       models: [{ name: 'qwen2.5-coder:0.5b' }]
     });
 
@@ -40,10 +51,10 @@ describe('ResearchServer HTTP API Seam', () => {
 
     serverInstance = new ResearchServer({ engine, port: 0 });
 
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       httpServer = serverInstance.app.listen(0, () => {
-        const port = httpServer.address().port;
-        baseUrl = `http://localhost:${port}`;
+        const addr = httpServer.address() as AddressInfo;
+        baseUrl = `http://localhost:${addr.port}`;
         resolve();
       });
     });
@@ -109,8 +120,8 @@ describe('ResearchServer HTTP API Seam', () => {
 
     await new Promise((resolve) => {
       const s = disconnectedServer.app.listen(0, async () => {
-        const port = s.address().port;
-        const res = await fetch(`http://localhost:${port}/api/research`, {
+        const addr = s.address() as AddressInfo;
+        const res = await fetch(`http://localhost:${addr.port}/api/research`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ topic: 'Some Topic' })
@@ -123,5 +134,66 @@ describe('ResearchServer HTTP API Seam', () => {
         s.close(resolve);
       });
     });
+  });
+
+  it('POST /api/research returns 400 when mode is unknown', async () => {
+    const response = await fetch(`${baseUrl}/api/research`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        topic: 'Solar Power',
+        mode: 'UNKNOWN_MODE'
+      })
+    });
+
+    assert.equal(response.status, 400);
+    const data = await response.json();
+    assert.ok(typeof data.error === 'string');
+  });
+
+  it('POST /api/research returns 400 when topic is empty or whitespace', async () => {
+    const response = await fetch(`${baseUrl}/api/research`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        topic: '   '
+      })
+    });
+
+    assert.equal(response.status, 400);
+    const data = await response.json();
+    assert.equal(data.error, 'Research topic is required');
+  });
+
+  it('POST /api/research returns 400 on non-JSON body', async () => {
+    const response = await fetch(`${baseUrl}/api/research`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: 'this is not json { [ bad'
+    });
+
+    assert.equal(response.status, 400);
+    const data = await response.json();
+    assert.ok(typeof data.error === 'string');
+  });
+
+  it('POST /api/research with explicit false flags omits synthesis and followups', async () => {
+    const response = await fetch(`${baseUrl}/api/research`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        topic: 'Renewable Energy',
+        mode: 'QUICK',
+        includeFollowups: false,
+        includeSynthesis: false
+      })
+    });
+
+    assert.equal(response.status, 200);
+    const data = await response.json();
+    assert.equal(data.topic, 'Renewable Energy');
+    assert.equal(data.synthesis, null);
+    assert.equal(data.followupQuestions, null);
+    assert.ok(data.executiveSummary);
   });
 });

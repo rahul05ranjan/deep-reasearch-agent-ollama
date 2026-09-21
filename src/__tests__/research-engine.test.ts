@@ -48,10 +48,10 @@ describe('ResearchEngine Seam', () => {
     assert.equal(result.analysis.subtopics.length, 2);
     assert.ok(result.researchResults['Diagnostic Imaging']);
     assert.ok(result.researchResults['Drug Discovery']);
-    assert.ok(result.synthesis.includes('Synthesis:'));
+    assert.ok(result.synthesis?.includes('Synthesis:'));
     assert.ok(Array.isArray(result.followupQuestions));
     assert.ok(result.followupQuestions.length > 0);
-    assert.ok(result.executiveSummary.includes('Executive Summary'));
+    assert.ok(result.executiveSummary?.includes('Executive Summary'));
     assert.ok(result.performanceStats);
     assert.equal(result.performanceStats.model, 'test-model');
   });
@@ -68,7 +68,7 @@ describe('ResearchEngine Seam', () => {
       ]
     });
 
-    const events = [];
+    const events: any[] = [];
     const engine = new ResearchEngine({ llmClient: fakeLLM });
 
     await engine.executeResearch('AI in Healthcare', {
@@ -169,5 +169,103 @@ describe('ResearchEngine Seam', () => {
 
     assert.equal(await engine1.checkConnection(), true);
     assert.equal(await engine2.checkConnection(), false);
+  });
+
+  it('strips extra keys from topic-analysis JSON', async () => {
+    const jsonWithExtra = JSON.stringify({
+      overview: 'Overview text',
+      extraField: 'unexpected',
+      subtopics: [
+        {
+          title: 'Diagnostic Imaging',
+          description: 'Using deep learning for radiology.',
+          questions: ['How accurate is AI imaging?'],
+          rogueKey: 'should be stripped'
+        }
+      ],
+      mainQuestions: ['What are the key benefits?']
+    });
+
+    const fakeLLM = new FakeLLMAdapter({
+      responses: [
+        jsonWithExtra,
+        'Imaging content',
+        'Synthesis',
+        '1. Followup?',
+        'Summary'
+      ]
+    });
+
+    const engine = new ResearchEngine({ llmClient: fakeLLM });
+    const result = await engine.executeResearch('AI in Healthcare', { mode: 'QUICK' });
+
+    assert.equal(result.analysis.overview, 'Overview text');
+    assert.equal('extraField' in result.analysis, false);
+    assert.equal('rogueKey' in result.analysis.subtopics[0], false);
+  });
+
+  it('falls back when topic-analysis JSON is missing subtopics', async () => {
+    const jsonWithoutSubtopics = JSON.stringify({
+      overview: 'Missing subtopics',
+      mainQuestions: ['Where are subtopics?']
+    });
+
+    const fakeLLM = new FakeLLMAdapter({
+      responses: [
+        jsonWithoutSubtopics,
+        'Content 1',
+        'Content 2',
+        'Content 3',
+        'Content 4',
+        'Synthesis',
+        '1. Followup?',
+        'Summary'
+      ]
+    });
+
+    const engine = new ResearchEngine({ llmClient: fakeLLM });
+    const result = await engine.executeResearch('Fallback Topic');
+
+    assert.equal(result.analysis.subtopics.length, 4);
+    assert.deepEqual(
+      result.analysis.subtopics.map((s) => s.title),
+      ['Core Concepts', 'Current State', 'Applications & Impact', 'Future Outlook']
+    );
+  });
+
+  it('falls back when a subtopic title is empty', async () => {
+    const jsonWithEmptyTitle = JSON.stringify({
+      overview: 'Empty title test',
+      subtopics: [
+        {
+          title: '   ',
+          description: 'Empty title description',
+          questions: ['Question?']
+        }
+      ],
+      mainQuestions: ['Main question?']
+    });
+
+    const fakeLLM = new FakeLLMAdapter({
+      responses: [
+        jsonWithEmptyTitle,
+        'Content 1',
+        'Content 2',
+        'Content 3',
+        'Content 4',
+        'Synthesis',
+        '1. Followup?',
+        'Summary'
+      ]
+    });
+
+    const engine = new ResearchEngine({ llmClient: fakeLLM });
+    const result = await engine.executeResearch('Empty Title Topic');
+
+    assert.equal(result.analysis.subtopics.length, 4);
+    assert.deepEqual(
+      result.analysis.subtopics.map((s) => s.title),
+      ['Core Concepts', 'Current State', 'Applications & Impact', 'Future Outlook']
+    );
   });
 });
